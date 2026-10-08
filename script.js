@@ -75,6 +75,17 @@ function buildRound(questions, category) {
     .map(prepareQuestion);
 }
 
+// 틀린 문항을 다시 섞고 보기도 다시 섞는다.
+function buildRetryRound(wrongQuestions) {
+  return shuffle(wrongQuestions).map(prepareQuestion);
+}
+
+// 정답이 아닌 보기 위치 3개 중 2개를 무작위로 골라 돌려준다.
+function pickHintRemovals(q) {
+  const wrongIndexes = q.choices.map((_, i) => i).filter((i) => i !== q.answer);
+  return shuffle(wrongIndexes).slice(0, 2);
+}
+
 // PRD 3.9: 맞히면 1점, 힌트 모드에서 힌트를 쓰고 맞히면 0.5점, 틀리면 0점
 function scoreFor(mode, isCorrect, hintUsed) {
   if (!isCorrect) return 0;
@@ -105,10 +116,36 @@ function showScreen(id) {
   for (const section of document.querySelectorAll("main > section")) section.hidden = section.id !== id;
 }
 
-function stopTimer() {} // Task 10에서 채운다
+// 스피드 모드: 이전 타이머를 지우고 제한 시간부터 1초씩 센다. 0초가 되면 시간 초과로 채점한다.
+function startTimer() {
+  stopTimer();
+  state.timeLeft = MODES[state.mode].timeLimit;
+  $("timer").textContent = `${state.timeLeft}초`;
+  state.timerId = setInterval(() => {
+    state.timeLeft--;
+    $("timer").textContent = `${state.timeLeft}초`;
+    if (state.timeLeft <= 0) {
+      stopTimer();
+      showFeedback(null);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(state.timerId);
+  state.timerId = null;
+}
+
+function selectMode(mode) {
+  state.mode = mode;
+  for (const button of $("mode-buttons").querySelectorAll("button[data-mode]")) {
+    button.classList.toggle("selected", button.dataset.mode === mode);
+  }
+  $("mode-desc").textContent = MODES[mode].desc;
+}
 
 function renderStart() {
-  $("mode-desc").textContent = MODES[state.mode].desc;
+  selectMode(state.mode);
   $("category-buttons").replaceChildren(...CATEGORIES.map((category) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -132,12 +169,25 @@ function startRound(category) {
   renderQuestion();
 }
 
+// 연습 모드: 방금 푼 판에서 틀린 문항만 다시 푼다. 첫 시도 점수(state.score)는 바꾸지 않는다.
+function startRetry() {
+  Object.assign(state, {
+    questions: buildRetryRound(state.wrong),
+    wrong: [],
+    index: 0,
+    isRetry: true,
+    retryCorrect: 0,
+  });
+  showScreen("screen-quiz");
+  renderQuestion();
+}
+
 function renderQuestion() {
   const q = state.questions[state.index];
   state.answered = false;
   state.hintUsed = false;
   $("quiz-category").textContent = state.category;
-  $("quiz-mode").textContent = MODES[state.mode].label;
+  $("quiz-mode").textContent = state.isRetry ? `${MODES[state.mode].label} 재도전` : MODES[state.mode].label;
   $("quiz-progress").textContent = `${state.index + 1} / ${state.questions.length}`;
   $("quiz-score").textContent = `점수 ${state.score}`;
   $("question-text").textContent = q.question;
@@ -150,6 +200,24 @@ function renderQuestion() {
     return button;
   }));
   $("feedback").hidden = true;
+  $("hint-btn").hidden = !MODES[state.mode].hint;
+  $("hint-btn").disabled = false;
+
+  const hasTimer = MODES[state.mode].timeLimit !== null;
+  $("timer").hidden = !hasTimer;
+  if (hasTimer) startTimer();
+}
+
+// 힌트 모드: 문항마다 한 번, 오답 보기 2개를 지운다. 지운 자리는 비워 두어 남은 보기의 위치가 바뀌지 않는다.
+function useHint() {
+  if (state.answered || state.hintUsed) return;
+  state.hintUsed = true;
+  const buttons = $("choices").querySelectorAll(".choice");
+  for (const i of pickHintRemovals(state.questions[state.index])) {
+    buttons[i].classList.add("removed");
+    buttons[i].disabled = true;
+  }
+  $("hint-btn").disabled = true;
 }
 
 function choose(index) {
@@ -165,7 +233,11 @@ function showFeedback(choiceIndex) {
 
   const q = state.questions[state.index];
   const isCorrect = choiceIndex === q.answer;
-  state.score += scoreFor(state.mode, isCorrect, state.hintUsed);
+  if (state.isRetry) {
+    if (isCorrect) state.retryCorrect++;
+  } else {
+    state.score += scoreFor(state.mode, isCorrect, state.hintUsed);
+  }
   if (!isCorrect) state.wrong.push(q);
 
   const buttons = $("choices").querySelectorAll(".choice");
@@ -202,8 +274,9 @@ function renderResult() {
   $("result-mode").textContent = MODES[state.mode].label;
   $("result-score").textContent = `${state.score} / ${QUESTIONS_PER_ROUND}점`;
   $("result-note").textContent = MODES[state.mode].ranked ? "" : MESSAGES.notRanked;
-  $("retry-result").hidden = true;
-  $("retry-btn").hidden = true;
+  $("retry-result").hidden = !state.isRetry;
+  $("retry-result").textContent = `재도전 ${state.retryCorrect}/${state.questions.length}`;
+  $("retry-btn").hidden = !(state.mode === "practice" && state.wrong.length > 0);
 }
 
 function goHome() {
@@ -259,6 +332,16 @@ function runSelfTests(questions) {
   check("점수: 힌트 쓰고 정답", () => scoreFor("hint", true, true), 0.5);
   check("점수: 힌트 쓰고 오답", () => scoreFor("hint", false, true), 0);
 
+  check("힌트: 2개, 서로 다름, 정답 아님(30회)", () => Array.from({ length: 30 }, () => {
+    const r = pickHintRemovals(sample({ answer: 1 }));
+    return r.length === 2 && r[0] !== r[1] && !r.includes(1) && r.every((i) => i >= 0 && i <= 3); }).every(Boolean), true);
+
+  check("재도전: 틀린 문항만, 정답 유지", () => {
+    const wrong = [1, 2, 3].map((n) => sample({ question: `틀린 ${n}`, answer: 3 }));
+    const r = buildRetryRound(wrong);
+    return [r.length, r.map((q) => q.question).sort(), r.every((q) => q.choices[q.answer] === "라")]; },
+    [3, ["틀린 1", "틀린 2", "틀린 3"], true]);
+
   check("문항: 40문항 형식", () => validateQuestions(questions), []);
 
   let failed = 0;
@@ -281,6 +364,10 @@ if (typeof document !== "undefined") {
     for (const message of validateQuestions(QUESTIONS)) console.error("문항 데이터 오류:", message);
     if (new URLSearchParams(location.search).has("test")) runSelfTests(QUESTIONS);
 
+    $("mode-buttons").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-mode]");
+      if (button) selectMode(button.dataset.mode);
+    });
     $("category-buttons").addEventListener("click", (event) => {
       const button = event.target.closest("button[data-category]");
       if (button) startRound(button.dataset.category);
@@ -290,7 +377,9 @@ if (typeof document !== "undefined") {
       if (button) choose(Number(button.dataset.index));
     });
     $("next-btn").addEventListener("click", nextQuestion);
+    $("hint-btn").addEventListener("click", useHint);
     $("home-btn").addEventListener("click", goHome);
+    $("retry-btn").addEventListener("click", startRetry);
 
     goHome();
   });
