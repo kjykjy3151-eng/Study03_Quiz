@@ -129,7 +129,7 @@ function runSelfTests(questions) {
   check("점수: 힌트 쓰고 정답", () => scoreFor("hint", true, true), 0.5);
   check("점수: 힌트 쓰고 오답", () => scoreFor("hint", false, true), 0);
 
-  check("문항: 작성분 형식", () => validateQuestions(questions, ["한국사", "세계지리", "과학"]), []);
+  check("문항: 40문항 형식", () => validateQuestions(questions), []);
 
   let failed = 0;
   for (const r of selfTestResults) {
