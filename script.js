@@ -107,8 +107,16 @@ function showScreen(id) {
 
 function stopTimer() {} // Task 10에서 채운다
 
+function selectMode(mode) {
+  state.mode = mode;
+  for (const button of $("mode-buttons").querySelectorAll("button[data-mode]")) {
+    button.classList.toggle("selected", button.dataset.mode === mode);
+  }
+  $("mode-desc").textContent = MODES[mode].desc;
+}
+
 function renderStart() {
-  $("mode-desc").textContent = MODES[state.mode].desc;
+  selectMode(state.mode);
   $("category-buttons").replaceChildren(...CATEGORIES.map((category) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -281,6 +289,10 @@ if (typeof document !== "undefined") {
     for (const message of validateQuestions(QUESTIONS)) console.error("문항 데이터 오류:", message);
     if (new URLSearchParams(location.search).has("test")) runSelfTests(QUESTIONS);
 
+    $("mode-buttons").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-mode]");
+      if (button) selectMode(button.dataset.mode);
+    });
     $("category-buttons").addEventListener("click", (event) => {
       const button = event.target.closest("button[data-category]");
       if (button) startRound(button.dataset.category);
