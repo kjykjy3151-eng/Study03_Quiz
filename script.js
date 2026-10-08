@@ -53,6 +53,34 @@ function validateQuestions(questions, categories = CATEGORIES) {
   return errors;
 }
 
+// Fisher-Yates로 섞은 새 배열을 돌려준다. 원본은 그대로 둔다.
+function shuffle(array) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// 보기를 섞고, 섞은 뒤의 정답 위치를 answer에 담은 새 문항을 돌려준다.
+function prepareQuestion(q) {
+  const order = shuffle(q.choices.map((_, i) => i));
+  return { ...q, choices: order.map((i) => q.choices[i]), answer: order.indexOf(q.answer) };
+}
+
+function buildRound(questions, category) {
+  return shuffle(questions.filter((q) => q.category === category))
+    .slice(0, QUESTIONS_PER_ROUND)
+    .map(prepareQuestion);
+}
+
+// PRD 3.9: 맞히면 1점, 힌트 모드에서 힌트를 쓰고 맞히면 0.5점, 틀리면 0점
+function scoreFor(mode, isCorrect, hintUsed) {
+  if (!isCorrect) return 0;
+  return mode === "hint" && hintUsed ? 0.5 : 1;
+}
+
 // ===== 5. 자체 점검 (node script.js 또는 index.html?test) =====
 
 const selfTestResults = [];
@@ -85,6 +113,21 @@ function runSelfTests(questions) {
   check("형식: 없는 카테고리", () => validateQuestions([sample({ category: "음악" })], []).length, 1);
   check("형식: 카테고리 10문항이면 통과", () => validateQuestions(tenOf("과학"), ["과학"]), []);
   check("형식: 카테고리 문항 수 부족", () => validateQuestions([sample()], ["한국사"]).length, 1);
+
+  check("섞기: 같은 원소", () => shuffle([1, 2, 3, 4, 5]).sort(), [1, 2, 3, 4, 5]);
+  check("섞기: 원본 유지", () => { const a = [1, 2, 3]; shuffle(a); return a; }, [1, 2, 3]);
+  check("보기 섞기: 정답 유지(20회)", () => Array.from({ length: 20 }, () => {
+    const q = prepareQuestion(sample({ answer: 2 })); return q.choices[q.answer]; }).every((c) => c === "다"), true);
+  check("판 만들기: 10문항, 같은 카테고리", () => {
+    const r = buildRound([...tenOf("과학"), ...tenOf("한국사")], "과학");
+    return [r.length, r.every((q) => q.category === "과학")]; }, [10, true]);
+  check("점수: 연습 정답", () => scoreFor("practice", true, false), 1);
+  check("점수: 연습 오답", () => scoreFor("practice", false, false), 0);
+  check("점수: 스피드 정답", () => scoreFor("speed", true, false), 1);
+  check("점수: 스피드 오답", () => scoreFor("speed", false, false), 0);
+  check("점수: 힌트 없이 정답", () => scoreFor("hint", true, false), 1);
+  check("점수: 힌트 쓰고 정답", () => scoreFor("hint", true, true), 0.5);
+  check("점수: 힌트 쓰고 오답", () => scoreFor("hint", false, true), 0);
 
   let failed = 0;
   for (const r of selfTestResults) {
