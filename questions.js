@@ -95,7 +95,7 @@ const QUESTIONS = [
   {
     category: "세계지리",
     question: "나일강이 북쪽으로 흘러 마지막에 흘러드는 바다는?",
-    choices: ["홍해", "지중해", "아라비아해", "흑해"],
+    choices: ["홍해", "지중해", "카스피해", "흑해"],
     answer: 1,
     explanation: "나일강은 아프리카 북동부를 지나 북쪽으로 흘러 지중해로 흘러든다.",
     source: { title: "Britannica, Nile River", url: "https://www.britannica.com/place/Nile-River" },
@@ -159,7 +159,7 @@ const QUESTIONS = [
   {
     category: "세계지리",
     question: "브라질의 공용어는?",
-    choices: ["스페인어", "포르투갈어", "영어", "프랑스어"],
+    choices: ["스페인어", "포르투갈어", "이탈리아어", "프랑스어"],
     answer: 1,
     explanation: "브라질에서는 포르투갈어가 공용어이자 가장 많이 쓰이는 언어이다.",
     source: { title: "Britannica, Brazil", url: "https://www.britannica.com/place/Brazil" },
@@ -177,7 +177,7 @@ const QUESTIONS = [
   {
     category: "과학",
     question: "1953년 DNA가 이중 나선 구조라는 것을 밝힌 두 과학자는?",
-    choices: ["왓슨과 크릭", "퀴리와 베크렐", "보어와 하이젠베르크", "러더퍼드와 채드윅"],
+    choices: ["왓슨과 크릭", "퀴리와 베크렐", "폴링과 코리", "멘델과 모건"],
     answer: 0,
     explanation: "1953년 왓슨과 크릭은 프랭클린과 윌킨스의 연구에 힘입어 DNA의 이중 나선 구조를 밝혔다.",
     source: { title: "Britannica, DNA", url: "https://www.britannica.com/science/DNA" },
@@ -225,7 +225,7 @@ const QUESTIONS = [
   {
     category: "과학",
     question: "진공에서 빛이 1초 동안 나아가는 거리는 약 얼마인가?",
-    choices: ["약 300km", "약 3,000km", "약 3만km", "약 30만km"],
+    choices: ["약 300km", "약 3천km", "약 3만km", "약 30만km"],
     answer: 3,
     explanation: "진공에서 빛의 속력은 정확히 초속 299,792,458m로 정의되어 있어, 1초에 약 30만km를 간다.",
     source: { title: "Britannica, Speed of light", url: "https://www.britannica.com/science/speed-of-light" },
@@ -251,7 +251,7 @@ const QUESTIONS = [
   {
     category: "예술과 문화",
     question: "지금 파리 루브르 박물관에 걸려 있는 '모나리자'를 그린 화가는?",
-    choices: ["미켈란젤로 부오나로티", "레오나르도 다빈치", "라파엘로 산치오", "산드로 보티첼리"],
+    choices: ["미켈란젤로", "다빈치", "라파엘로", "보티첼리"],
     answer: 1,
     explanation: "모나리자는 레오나르도 다빈치가 그린 초상화로, 파리 루브르 박물관에 있다.",
     source: { title: "Britannica, Mona Lisa", url: "https://www.britannica.com/topic/Mona-Lisa-painting" },
@@ -259,7 +259,7 @@ const QUESTIONS = [
   {
     category: "예술과 문화",
     question: "1889년 프랑스 생레미의 요양원에 머물며 '별이 빛나는 밤'을 그린 화가는?",
-    choices: ["클로드 모네", "폴 고갱", "빈센트 반 고흐", "폴 세잔"],
+    choices: ["모네", "고갱", "반 고흐", "세잔"],
     answer: 2,
     explanation: "반 고흐는 1889년 생레미의 요양원에 머물던 때 '별이 빛나는 밤'을 그렸다.",
     source: { title: "Britannica, The Starry Night", url: "https://www.britannica.com/topic/The-Starry-Night" },
@@ -267,7 +267,7 @@ const QUESTIONS = [
   {
     category: "예술과 문화",
     question: "이탈리아 베로나를 배경으로 한 희곡 '로미오와 줄리엣'의 작가는?",
-    choices: ["셰익스피어", "괴테", "몰리에르", "입센"],
+    choices: ["셰익스피어", "소포클레스", "몰리에르", "체호프"],
     answer: 0,
     explanation: "셰익스피어의 '로미오와 줄리엣'은 이탈리아 베로나를 배경으로 한다.",
     source: { title: "Britannica, Romeo and Juliet", url: "https://www.britannica.com/topic/Romeo-and-Juliet" },
@@ -275,7 +275,7 @@ const QUESTIONS = [
   {
     category: "예술과 문화",
     question: "근대 소설의 원형으로 꼽히는 '돈키호테'의 작가는?",
-    choices: ["단테 알리기에리", "레프 톨스토이", "빅토르 위고", "미겔 데 세르반테스"],
+    choices: ["헤밍웨이", "톨스토이", "도스토옙스키", "세르반테스"],
     answer: 3,
     explanation: "'돈키호테'는 미겔 데 세르반테스의 소설로, 근대 소설의 원형으로 여겨진다.",
     source: { title: "Britannica, Don Quixote", url: "https://www.britannica.com/topic/Don-Quixote-novel" },
@@ -306,7 +306,7 @@ const QUESTIONS = [
   },
   {
     category: "예술과 문화",
-    question: "소리꾼 한 명이 고수의 북 반주에 맞추어 이야기를 노래로 풀어 가는 한국의 전통 공연 예술은?",
+    question: "노래하는 사람 한 명이 고수의 북 반주에 맞추어 이야기를 풀어 가는 한국의 전통 공연 예술은?",
     choices: ["시조", "민요", "탈춤", "판소리"],
     answer: 3,
     explanation: "판소리는 소리꾼 한 명과 북을 치는 고수 한 명이 이야기를 노래로 풀어 가는 공연 예술이다.",

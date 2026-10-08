@@ -10,7 +10,7 @@
 
 **기술:** HTML, CSS, 바닐라 자바스크립트(일반 `<script>`), localStorage. 외부 라이브러리, 빌드 도구, 테스트 파일 없음. 점검 실행에 Node.js(v24)를 쓴다.
 
-**명세:** [PRD.md](PRD.md). 실행자는 이 계획서와 PRD.md를 함께 읽는다. 화면 문구, 점수 규칙, 문항 규칙의 원문은 PRD에 있고, 이 계획서는 PRD의 절 번호(예: PRD 3.7)로 가리킨다.
+**명세:** [PRD.md](PRD.md). 실행자는 이 계획서와 PRD.md를 함께 읽는다. 화면 문구와 점수 규칙의 원문은 PRD에, 문항 작성 규칙의 정본은 CLAUDE.md에 있고, 이 계획서는 PRD의 절 번호(예: PRD 3.7)로 가리킨다.
 
 ## 전체 제약
 
@@ -151,7 +151,7 @@ const MODES = {
 const CATEGORIES = ["한국사", "세계지리", "과학", "예술과 문화"];
 const QUESTIONS_PER_ROUND = 10;
 const RANKING_SIZE = 5;
-const EXPLANATION_MAX = 80; // PRD 4.3 규칙 4 "60자 안팎"의 상한
+const EXPLANATION_MAX = 80; // PRD 4.3 규칙 2 "60자 안팎"의 상한
 const STORAGE_KEY = "quiz-rankings";
 const MESSAGES = {
   correct: "정답입니다.",
@@ -287,7 +287,7 @@ Run: `node script.js` → Expected: 실패 0.
 - Consumes: `validateQuestions`(Task 1), `runSelfTests`가 받는 `questions` 인자
 - Produces: `QUESTIONS`에 그 카테고리의 문항 10개(PRD 4.2 형식)
 
-**문항 작성 기준** (PRD 4.3에 더해 이 계획에서 정함)
+**문항 작성 기준** (PRD 4.3과 CLAUDE.md의 문항 작성 규칙에 더해 이 계획에서 정함)
 
 - 대학 1학년이 교양으로 알 만한 수준이다. 한 카테고리 안에서 시대, 지역, 분야가 고르게 섞이게 한다.
 - 학계에 이견이 있거나 출처마다 답이 다른 주제는 피한다. 피할 수 없으면 다른 것을 묻는 문항으로 바꾼다.
@@ -313,7 +313,7 @@ Run: `node script.js` → Expected: 실패 0.
 - [ ] **Step 5: 최상급 표현을 점검한다**
 
 Run: `grep -n "가장\|최대\|최초\|최고" questions.js`
-Expected: 찾은 문항마다 문제에 기준과 시점이 적혀 있다(PRD 4.3 규칙 3). 빠진 문항은 고치고 Step 4를 다시 한다.
+Expected: 찾은 문항마다 문제에 기준과 시점이 적혀 있다(CLAUDE.md 문항 작성 규칙 2). 빠진 문항은 고치고 Step 4를 다시 한다.
 
 - [ ] **Step 6: 커밋한다**
 
@@ -600,7 +600,7 @@ check("저장: 예외면 false", () => saveRankings({}, fakeStorage(null, { fail
 | 3.9 점수 규칙 | Task 2, 11 |
 | 3.10 순위표 | Task 13, 14 |
 | 4.1~4.2 카테고리, 40문항, 데이터 형식 | Task 1, 3~6 |
-| 4.3 문항 규칙 1~5 | Task 1(형식), Task 3~6(내용, 출처, 최상급) |
+| 4.3 문항 규칙 1~2(출처, 해설 길이), CLAUDE.md 문항 작성 규칙 | Task 1(형식), Task 3~6(내용, 출처, 최상급) |
 | 5.1 파일 구성, Node 내보내기 | 전체 제약, Task 1 |
 | 5.2~5.6 `script.js` 구조 | 파일 구조, Task 1, 2, 7, 10, 11, 13 |
 | 5.7 오류 처리, 자체 점검 | Task 1 |
@@ -618,6 +618,6 @@ check("저장: 예외면 false", () => saveRankings({}, fakeStorage(null, { fail
 | 저장된 값이 깨진 경우 | 안내 없이 빈 순위표로 시작하고 다음 저장 때 덮어씀 | 저장이 실제로 되는데 "기록을 저장할 수 없습니다."를 띄우면 맞지 않음. 저장소 자체를 못 쓸 때는 PRD대로 그 문구를 띄움 |
 | `loadRankings`, `saveRankings` 인자 | 저장소를 인자로 받음 | Node 점검에서 가짜 저장소로 확인하려고 |
 | 상태 필드 | `state.answered`를 더함 | 같은 문항 두 번 채점 방지(리뷰 초점 1) |
-| 출처 범위 | 위키, 블로그, 개인 사이트를 출처로 쓰지 않음 | PRD 4.3 규칙 2의 "확인한 출처"를 믿을 만한 곳으로 한정 |
-| 부정형 문제 | 쓰지 않음 | 정답이 여러 개로 읽히기 쉬움(PRD 4.3 규칙 1) |
+| 출처 범위 | 위키, 블로그, 개인 사이트를 출처로 쓰지 않음 | PRD 4.3 규칙 1의 "확인한 출처"를 믿을 만한 곳으로 한정 |
+| 부정형 문제 | 쓰지 않음 | 정답이 여러 개로 읽히기 쉬움(CLAUDE.md 문항 작성 규칙 1, 9) |
 | 문항 검수표 | 1단계 보고에 붙임(파일로 만들지 않음) | 사람의 첫 확인(PRD 7.3)에 쓰려고 |
