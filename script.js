@@ -10,7 +10,7 @@ const MODES = {
 const CATEGORIES = ["한국사", "세계지리", "과학", "예술과 문화"];
 const QUESTIONS_PER_ROUND = 10;
 const RANKING_SIZE = 5;
-const EXPLANATION_MAX = 80; // PRD 4.3 규칙 4 "60자 안팎"의 상한
+const EXPLANATION_MAX = 80; // PRD 4.3 규칙 2 "60자 안팎"의 상한
 const STORAGE_KEY = "quiz-rankings";
 const MESSAGES = {
   correct: "정답입니다.",
