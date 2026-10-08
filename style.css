@@ -131,6 +131,35 @@ button:disabled {
   font-weight: bold;
 }
 
+.ranking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.ranking-table caption {
+  text-align: left;
+  font-weight: bold;
+  padding: 4px 0;
+}
+
+.ranking-table th,
+.ranking-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #e1e4e8;
+  text-align: left;
+}
+
+#rankings-home-btn {
+  margin-top: 16px;
+}
+
 #screen-result button {
   margin: 4px 8px 4px 0;
 }

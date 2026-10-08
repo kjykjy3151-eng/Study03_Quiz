@@ -328,10 +328,68 @@ function renderResult() {
   $("result-category").textContent = state.category;
   $("result-mode").textContent = MODES[state.mode].label;
   $("result-score").textContent = `${state.score} / ${QUESTIONS_PER_ROUND}점`;
-  $("result-note").textContent = MODES[state.mode].ranked ? "" : MESSAGES.notRanked;
+  $("result-note").textContent = MODES[state.mode].ranked ? recordResult() : MESSAGES.notRanked;
   $("retry-result").hidden = !state.isRetry;
   $("retry-result").textContent = `재도전 ${state.retryCorrect}/${state.questions.length}`;
   $("retry-btn").hidden = !(state.mode === "practice" && state.wrong.length > 0);
+}
+
+// 스피드, 힌트 모드의 첫 시도 결과를 순위표에 넣고, 결과 화면에 쓸 안내 문구를 돌려준다.
+function recordResult() {
+  const rankings = loadRankings(getStorage());
+  if (rankings === null) return MESSAGES.storageUnavailable;
+  const key = rankingKey(state.mode, state.category);
+  const { list, rank } = addRecord(rankings[key] || [], { score: state.score, date: todayString() });
+  rankings[key] = list;
+  if (!saveRankings(rankings, getStorage())) return MESSAGES.storageUnavailable;
+  return rank === null ? MESSAGES.notInTop : MESSAGES.ranked(rank);
+}
+
+function renderRankings() {
+  const rankings = loadRankings(getStorage());
+  if (rankings === null) {
+    const p = document.createElement("p");
+    p.textContent = MESSAGES.storageUnavailable;
+    $("rankings-body").replaceChildren(p);
+    return;
+  }
+  const sections = Object.keys(MODES).filter((mode) => MODES[mode].ranked).map((mode) => {
+    const heading = document.createElement("h3");
+    heading.textContent = MODES[mode].label;
+    const grid = document.createElement("div");
+    grid.className = "ranking-grid";
+    grid.replaceChildren(...CATEGORIES.map((category) => renderRankingTable(category, rankings[rankingKey(mode, category)] || [])));
+    return [heading, grid];
+  });
+  $("rankings-body").replaceChildren(...sections.flat());
+}
+
+function renderRankingTable(category, list) {
+  const table = document.createElement("table");
+  table.className = "ranking-table";
+  table.createCaption().textContent = category;
+  const head = table.createTHead().insertRow();
+  for (const title of ["순위", "점수", "날짜"]) {
+    const th = document.createElement("th");
+    th.textContent = title;
+    head.append(th);
+  }
+  const body = table.createTBody();
+  if (list.length === 0) {
+    const cell = body.insertRow().insertCell();
+    cell.colSpan = 3;
+    cell.textContent = MESSAGES.noRecords;
+  }
+  list.forEach((record, i) => {
+    const row = body.insertRow();
+    for (const value of [`${i + 1}위`, `${record.score}점`, record.date]) row.insertCell().textContent = value;
+  });
+  return table;
+}
+
+function showRankings() {
+  renderRankings();
+  showScreen("screen-rankings");
 }
 
 function goHome() {
@@ -456,6 +514,8 @@ if (typeof document !== "undefined") {
     $("hint-btn").addEventListener("click", useHint);
     $("home-btn").addEventListener("click", goHome);
     $("retry-btn").addEventListener("click", startRetry);
+    $("rankings-btn").addEventListener("click", showRankings);
+    $("rankings-home-btn").addEventListener("click", goHome);
 
     goHome();
   });
