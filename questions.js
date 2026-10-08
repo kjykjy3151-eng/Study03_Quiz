@@ -1,4 +1,86 @@
 // 2026-10-08 20:46 KST
 
-const QUESTIONS = [];
+const QUESTIONS = [
+  // ===== 한국사 =====
+  {
+    category: "한국사",
+    question: "1443년 훈민정음을 창제하고 1446년에 반포한 조선의 왕은?",
+    choices: ["태종", "세종", "세조", "성종"],
+    answer: 1,
+    explanation: "세종은 1443년 겨울 훈민정음을 창제했고, 1446년 9월 상순에 반포했다.",
+    source: { title: "한국민족문화대백과사전, 훈민정음", url: "https://encykorea.aks.ac.kr/Article/E0065805" },
+  },
+  {
+    category: "한국사",
+    question: "918년 고려를 세운 인물은?",
+    choices: ["궁예", "견훤", "왕건", "이성계"],
+    answer: 2,
+    explanation: "고려는 918년 개성 출신 왕건이 세웠고, 936년 후삼국을 통합했다.",
+    source: { title: "한국민족문화대백과사전, 고려", url: "https://encykorea.aks.ac.kr/Article/E0003424" },
+  },
+  {
+    category: "한국사",
+    question: "몽골의 침입을 불력으로 물리치려는 염원으로 새긴 고려 대장경판(팔만대장경판)을 보관하고 있는 사찰은?",
+    choices: ["해인사", "불국사", "송광사", "통도사"],
+    answer: 0,
+    explanation: "팔만대장경판은 몽골 침입 때 새긴 것으로, 지금 합천 해인사에 보관되어 있다.",
+    source: { title: "한국민족문화대백과사전, 합천 해인사 대장경판", url: "https://encykorea.aks.ac.kr/Article/E0062711" },
+  },
+  {
+    category: "한국사",
+    question: "1592년 한산섬 앞바다에서 학익진으로 일본 수군을 크게 무찌른 조선 수군의 지휘관은?",
+    choices: ["권율", "김시민", "곽재우", "이순신"],
+    answer: 3,
+    explanation: "한산도대첩에서 전라좌수사 이순신은 모든 전선이 학익진을 짜서 공격하게 했다.",
+    source: { title: "한국민족문화대백과사전, 한산도대첩", url: "https://encykorea.aks.ac.kr/Article/E0061676" },
+  },
+  {
+    category: "한국사",
+    question: "1919년 4월 11일 대한민국임시정부가 수립된 도시는?",
+    choices: ["상하이", "충칭", "베이징", "도쿄"],
+    answer: 0,
+    explanation: "대한민국임시정부는 3·1운동 이후인 1919년 4월 11일 중국 상하이에서 수립되었다.",
+    source: { title: "한국민족문화대백과사전, 대한민국 임시정부 수립 기념일", url: "https://encykorea.aks.ac.kr/Article/E0080590" },
+  },
+  {
+    category: "한국사",
+    question: "1894년 동학농민군을 이끌고 봉기했으며, 몸집이 작아 '녹두장군'이라 불린 인물은?",
+    choices: ["최제우", "전봉준", "김옥균", "홍경래"],
+    answer: 1,
+    explanation: "전봉준은 몸이 왜소해 녹두라 불렸고, 1894년 동학농민군을 이끌고 봉기했다.",
+    source: { title: "한국민족문화대백과사전, 전봉준", url: "https://encykorea.aks.ac.kr/Article/E0049437" },
+  },
+  {
+    category: "한국사",
+    question: "1377년 청주 흥덕사에서 금속활자로 인쇄한 책은?",
+    choices: ["삼국유사", "동의보감", "불조직지심체요절", "용비어천가"],
+    answer: 2,
+    explanation: "직지는 1377년 흥덕사에서 금속활자로 찍었고, 2001년 유네스코 세계기록유산에 올랐다.",
+    source: { title: "한국민족문화대백과사전, 불조직지심체요절", url: "https://encykorea.aks.ac.kr/Article/E0025035" },
+  },
+  {
+    category: "한국사",
+    question: "1861년 목판본으로 제작된 전국 지도첩 '대동여지도'를 만든 인물은?",
+    choices: ["정약용", "정상기", "박지원", "김정호"],
+    answer: 3,
+    explanation: "대동여지도는 1861년 김정호가 목판본으로 제작한 절첩분첩식 전국 지도첩이다.",
+    source: { title: "한국민족문화대백과사전, 대동여지도", url: "https://encykorea.aks.ac.kr/Article/E0014266" },
+  },
+  {
+    category: "한국사",
+    question: "6·25 전쟁(한국전쟁)의 휴전협정이 이루어진 해는?",
+    choices: ["1950년", "1951년", "1953년", "1955년"],
+    answer: 2,
+    explanation: "1953년 7월 27일 휴전협정이 이루어져 3년 1개월에 걸친 전쟁이 중지되었다.",
+    source: { title: "한국민족문화대백과사전, 한국전쟁", url: "https://encykorea.aks.ac.kr/Article/E0042143" },
+  },
+  {
+    category: "한국사",
+    question: "828년 완도에 청해진을 건설하고 남해의 해상권을 장악한 신라의 인물은?",
+    choices: ["장보고", "김유신", "최치원", "원효"],
+    answer: 0,
+    explanation: "장보고는 828년 완도에 청해진을 건설해 당, 신라, 일본을 잇는 무역을 주도했다.",
+    source: { title: "한국민족문화대백과사전, 장보고", url: "https://encykorea.aks.ac.kr/Article/E0048474" },
+  },
+];
 if (typeof module !== "undefined") module.exports = QUESTIONS;
