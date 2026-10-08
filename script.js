@@ -75,6 +75,11 @@ function buildRound(questions, category) {
     .map(prepareQuestion);
 }
 
+// 틀린 문항을 다시 섞고 보기도 다시 섞는다.
+function buildRetryRound(wrongQuestions) {
+  return shuffle(wrongQuestions).map(prepareQuestion);
+}
+
 // 정답이 아닌 보기 위치 3개 중 2개를 무작위로 골라 돌려준다.
 function pickHintRemovals(q) {
   const wrongIndexes = q.choices.map((_, i) => i).filter((i) => i !== q.answer);
@@ -164,12 +169,25 @@ function startRound(category) {
   renderQuestion();
 }
 
+// 연습 모드: 방금 푼 판에서 틀린 문항만 다시 푼다. 첫 시도 점수(state.score)는 바꾸지 않는다.
+function startRetry() {
+  Object.assign(state, {
+    questions: buildRetryRound(state.wrong),
+    wrong: [],
+    index: 0,
+    isRetry: true,
+    retryCorrect: 0,
+  });
+  showScreen("screen-quiz");
+  renderQuestion();
+}
+
 function renderQuestion() {
   const q = state.questions[state.index];
   state.answered = false;
   state.hintUsed = false;
   $("quiz-category").textContent = state.category;
-  $("quiz-mode").textContent = MODES[state.mode].label;
+  $("quiz-mode").textContent = state.isRetry ? `${MODES[state.mode].label} 재도전` : MODES[state.mode].label;
   $("quiz-progress").textContent = `${state.index + 1} / ${state.questions.length}`;
   $("quiz-score").textContent = `점수 ${state.score}`;
   $("question-text").textContent = q.question;
@@ -215,7 +233,11 @@ function showFeedback(choiceIndex) {
 
   const q = state.questions[state.index];
   const isCorrect = choiceIndex === q.answer;
-  state.score += scoreFor(state.mode, isCorrect, state.hintUsed);
+  if (state.isRetry) {
+    if (isCorrect) state.retryCorrect++;
+  } else {
+    state.score += scoreFor(state.mode, isCorrect, state.hintUsed);
+  }
   if (!isCorrect) state.wrong.push(q);
 
   const buttons = $("choices").querySelectorAll(".choice");
@@ -252,8 +274,9 @@ function renderResult() {
   $("result-mode").textContent = MODES[state.mode].label;
   $("result-score").textContent = `${state.score} / ${QUESTIONS_PER_ROUND}점`;
   $("result-note").textContent = MODES[state.mode].ranked ? "" : MESSAGES.notRanked;
-  $("retry-result").hidden = true;
-  $("retry-btn").hidden = true;
+  $("retry-result").hidden = !state.isRetry;
+  $("retry-result").textContent = `재도전 ${state.retryCorrect}/${state.questions.length}`;
+  $("retry-btn").hidden = !(state.mode === "practice" && state.wrong.length > 0);
 }
 
 function goHome() {
@@ -313,6 +336,12 @@ function runSelfTests(questions) {
     const r = pickHintRemovals(sample({ answer: 1 }));
     return r.length === 2 && r[0] !== r[1] && !r.includes(1) && r.every((i) => i >= 0 && i <= 3); }).every(Boolean), true);
 
+  check("재도전: 틀린 문항만, 정답 유지", () => {
+    const wrong = [1, 2, 3].map((n) => sample({ question: `틀린 ${n}`, answer: 3 }));
+    const r = buildRetryRound(wrong);
+    return [r.length, r.map((q) => q.question).sort(), r.every((q) => q.choices[q.answer] === "라")]; },
+    [3, ["틀린 1", "틀린 2", "틀린 3"], true]);
+
   check("문항: 40문항 형식", () => validateQuestions(questions), []);
 
   let failed = 0;
@@ -350,6 +379,7 @@ if (typeof document !== "undefined") {
     $("next-btn").addEventListener("click", nextQuestion);
     $("hint-btn").addEventListener("click", useHint);
     $("home-btn").addEventListener("click", goHome);
+    $("retry-btn").addEventListener("click", startRetry);
 
     goHome();
   });
