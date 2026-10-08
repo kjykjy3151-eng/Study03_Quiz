@@ -75,6 +75,12 @@ function buildRound(questions, category) {
     .map(prepareQuestion);
 }
 
+// 정답이 아닌 보기 위치 3개 중 2개를 무작위로 골라 돌려준다.
+function pickHintRemovals(q) {
+  const wrongIndexes = q.choices.map((_, i) => i).filter((i) => i !== q.answer);
+  return shuffle(wrongIndexes).slice(0, 2);
+}
+
 // PRD 3.9: 맞히면 1점, 힌트 모드에서 힌트를 쓰고 맞히면 0.5점, 틀리면 0점
 function scoreFor(mode, isCorrect, hintUsed) {
   if (!isCorrect) return 0;
@@ -176,10 +182,24 @@ function renderQuestion() {
     return button;
   }));
   $("feedback").hidden = true;
+  $("hint-btn").hidden = !MODES[state.mode].hint;
+  $("hint-btn").disabled = false;
 
   const hasTimer = MODES[state.mode].timeLimit !== null;
   $("timer").hidden = !hasTimer;
   if (hasTimer) startTimer();
+}
+
+// 힌트 모드: 문항마다 한 번, 오답 보기 2개를 지운다. 지운 자리는 비워 두어 남은 보기의 위치가 바뀌지 않는다.
+function useHint() {
+  if (state.answered || state.hintUsed) return;
+  state.hintUsed = true;
+  const buttons = $("choices").querySelectorAll(".choice");
+  for (const i of pickHintRemovals(state.questions[state.index])) {
+    buttons[i].classList.add("removed");
+    buttons[i].disabled = true;
+  }
+  $("hint-btn").disabled = true;
 }
 
 function choose(index) {
@@ -289,6 +309,10 @@ function runSelfTests(questions) {
   check("점수: 힌트 쓰고 정답", () => scoreFor("hint", true, true), 0.5);
   check("점수: 힌트 쓰고 오답", () => scoreFor("hint", false, true), 0);
 
+  check("힌트: 2개, 서로 다름, 정답 아님(30회)", () => Array.from({ length: 30 }, () => {
+    const r = pickHintRemovals(sample({ answer: 1 }));
+    return r.length === 2 && r[0] !== r[1] && !r.includes(1) && r.every((i) => i >= 0 && i <= 3); }).every(Boolean), true);
+
   check("문항: 40문항 형식", () => validateQuestions(questions), []);
 
   let failed = 0;
@@ -324,6 +348,7 @@ if (typeof document !== "undefined") {
       if (button) choose(Number(button.dataset.index));
     });
     $("next-btn").addEventListener("click", nextQuestion);
+    $("hint-btn").addEventListener("click", useHint);
     $("home-btn").addEventListener("click", goHome);
 
     goHome();
