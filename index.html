@@ -10,18 +10,19 @@
 </head>
 <body>
   <main class="app">
+    <header id="student-info" class="student-info">2601935 김지윤</header>
+
     <section id="screen-start">
       <h1>상식 퀴즈</h1>
-      <h2>모드</h2>
-      <div id="mode-buttons" class="button-grid">
-        <button type="button" data-mode="practice">연습</button>
-        <button type="button" data-mode="speed">스피드</button>
-        <button type="button" data-mode="hint">힌트</button>
-      </div>
-      <p id="mode-desc" class="note"></p>
       <h2>카테고리</h2>
       <div id="category-buttons" class="button-grid"></div>
       <p><button id="rankings-btn" type="button">순위표</button></p>
+    </section>
+
+    <section id="screen-mode" hidden>
+      <h2><span id="mode-category" class="badge"></span> 모드를 고르세요</h2>
+      <div id="mode-buttons" class="mode-list"></div>
+      <button id="mode-back-btn" type="button">뒤로</button>
     </section>
 
     <section id="screen-quiz" hidden>

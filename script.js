@@ -191,16 +191,31 @@ function stopTimer() {
   state.timerId = null;
 }
 
-function selectMode(mode) {
+// 카테고리를 고른 뒤 나오는 모드 선택 화면. 모드마다 이름과 규칙 한 줄을 보여 준다.
+function showModeScreen(category) {
+  state.category = category;
+  $("mode-category").textContent = category;
+  $("mode-buttons").replaceChildren(...Object.keys(MODES).map((mode) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.mode = mode;
+    const label = document.createElement("strong");
+    label.textContent = MODES[mode].label;
+    const desc = document.createElement("span");
+    desc.className = "mode-desc";
+    desc.textContent = MODES[mode].desc;
+    button.append(label, desc);
+    return button;
+  }));
+  showScreen("screen-mode");
+}
+
+function startMode(mode) {
   state.mode = mode;
-  for (const button of $("mode-buttons").querySelectorAll("button[data-mode]")) {
-    button.classList.toggle("selected", button.dataset.mode === mode);
-  }
-  $("mode-desc").textContent = MODES[mode].desc;
+  startRound(state.category);
 }
 
 function renderStart() {
-  selectMode(state.mode);
   $("category-buttons").replaceChildren(...CATEGORIES.map((category) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -498,14 +513,15 @@ if (typeof document !== "undefined") {
     for (const message of validateQuestions(QUESTIONS)) console.error("문항 데이터 오류:", message);
     if (new URLSearchParams(location.search).has("test")) runSelfTests(QUESTIONS);
 
-    $("mode-buttons").addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-mode]");
-      if (button) selectMode(button.dataset.mode);
-    });
     $("category-buttons").addEventListener("click", (event) => {
       const button = event.target.closest("button[data-category]");
-      if (button) startRound(button.dataset.category);
+      if (button) showModeScreen(button.dataset.category);
     });
+    $("mode-buttons").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-mode]");
+      if (button) startMode(button.dataset.mode);
+    });
+    $("mode-back-btn").addEventListener("click", goHome);
     $("choices").addEventListener("click", (event) => {
       const button = event.target.closest("button.choice");
       if (button) choose(Number(button.dataset.index));

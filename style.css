@@ -53,10 +53,30 @@ button:disabled {
   gap: 8px;
 }
 
-#mode-buttons button.selected {
-  border-color: #1f6feb;
-  background: #ddeaff;
+.student-info {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e6ebf2;
   font-weight: bold;
+}
+
+.mode-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mode-list button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+}
+
+.mode-list .mode-desc {
+  color: #57606a;
+  font-size: 0.9rem;
 }
 
 .badge {
