@@ -10,6 +10,7 @@ body {
   color: #1f2328;
   font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
   line-height: 1.5;
+  word-break: keep-all;
 }
 
 .app {

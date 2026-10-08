@@ -192,7 +192,24 @@ function nextQuestion() {
   renderQuestion();
 }
 
-function finishPass() {} // Task 8에서 채운다
+function finishPass() {
+  renderResult();
+  showScreen("screen-result");
+}
+
+function renderResult() {
+  $("result-category").textContent = state.category;
+  $("result-mode").textContent = MODES[state.mode].label;
+  $("result-score").textContent = `${state.score} / ${QUESTIONS_PER_ROUND}점`;
+  $("result-note").textContent = MODES[state.mode].ranked ? "" : MESSAGES.notRanked;
+  $("retry-result").hidden = true;
+  $("retry-btn").hidden = true;
+}
+
+function goHome() {
+  renderStart();
+  showScreen("screen-start");
+}
 
 // ===== 5. 자체 점검 (node script.js 또는 index.html?test) =====
 
@@ -273,9 +290,9 @@ if (typeof document !== "undefined") {
       if (button) choose(Number(button.dataset.index));
     });
     $("next-btn").addEventListener("click", nextQuestion);
+    $("home-btn").addEventListener("click", goHome);
 
-    renderStart();
-    showScreen("screen-start");
+    goHome();
   });
 }
 
