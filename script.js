@@ -92,6 +92,61 @@ function scoreFor(mode, isCorrect, hintUsed) {
   return mode === "hint" && hintUsed ? 0.5 : 1;
 }
 
+function rankingKey(mode, category) {
+  return `${mode}:${category}`;
+}
+
+// 점수 높은 순으로 상위 RANKING_SIZE개만 남긴다. 동점이면 먼저 세운 기록이 위다(sort는 안정 정렬).
+// 새 기록이 남았으면 1부터 센 순위를, 못 들었으면 null을 돌려준다. 원본 list는 바꾸지 않는다.
+function addRecord(list, record) {
+  const sorted = [...list, record].sort((a, b) => b.score - a.score).slice(0, RANKING_SIZE);
+  const index = sorted.indexOf(record);
+  return { list: sorted, rank: index === -1 ? null : index + 1 };
+}
+
+function todayString(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+// ===== 3. 저장 (localStorage만 다룸) =====
+
+function getStorage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+// 저장소를 쓸 수 없으면 null, 값이 없거나 깨졌으면 빈 순위표 {}를 돌려준다.
+function loadRankings(storage) {
+  if (!storage) return null;
+  let raw;
+  try {
+    raw = storage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveRankings(rankings, storage) {
+  if (!storage) return false;
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(rankings));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ===== 4. 게임 상태와 화면 조작 (브라우저에서만 쓰임) =====
 
 const state = {
@@ -273,10 +328,68 @@ function renderResult() {
   $("result-category").textContent = state.category;
   $("result-mode").textContent = MODES[state.mode].label;
   $("result-score").textContent = `${state.score} / ${QUESTIONS_PER_ROUND}점`;
-  $("result-note").textContent = MODES[state.mode].ranked ? "" : MESSAGES.notRanked;
+  $("result-note").textContent = MODES[state.mode].ranked ? recordResult() : MESSAGES.notRanked;
   $("retry-result").hidden = !state.isRetry;
   $("retry-result").textContent = `재도전 ${state.retryCorrect}/${state.questions.length}`;
   $("retry-btn").hidden = !(state.mode === "practice" && state.wrong.length > 0);
+}
+
+// 스피드, 힌트 모드의 첫 시도 결과를 순위표에 넣고, 결과 화면에 쓸 안내 문구를 돌려준다.
+function recordResult() {
+  const rankings = loadRankings(getStorage());
+  if (rankings === null) return MESSAGES.storageUnavailable;
+  const key = rankingKey(state.mode, state.category);
+  const { list, rank } = addRecord(rankings[key] || [], { score: state.score, date: todayString() });
+  rankings[key] = list;
+  if (!saveRankings(rankings, getStorage())) return MESSAGES.storageUnavailable;
+  return rank === null ? MESSAGES.notInTop : MESSAGES.ranked(rank);
+}
+
+function renderRankings() {
+  const rankings = loadRankings(getStorage());
+  if (rankings === null) {
+    const p = document.createElement("p");
+    p.textContent = MESSAGES.storageUnavailable;
+    $("rankings-body").replaceChildren(p);
+    return;
+  }
+  const sections = Object.keys(MODES).filter((mode) => MODES[mode].ranked).map((mode) => {
+    const heading = document.createElement("h3");
+    heading.textContent = MODES[mode].label;
+    const grid = document.createElement("div");
+    grid.className = "ranking-grid";
+    grid.replaceChildren(...CATEGORIES.map((category) => renderRankingTable(category, rankings[rankingKey(mode, category)] || [])));
+    return [heading, grid];
+  });
+  $("rankings-body").replaceChildren(...sections.flat());
+}
+
+function renderRankingTable(category, list) {
+  const table = document.createElement("table");
+  table.className = "ranking-table";
+  table.createCaption().textContent = category;
+  const head = table.createTHead().insertRow();
+  for (const title of ["순위", "점수", "날짜"]) {
+    const th = document.createElement("th");
+    th.textContent = title;
+    head.append(th);
+  }
+  const body = table.createTBody();
+  if (list.length === 0) {
+    const cell = body.insertRow().insertCell();
+    cell.colSpan = 3;
+    cell.textContent = MESSAGES.noRecords;
+  }
+  list.forEach((record, i) => {
+    const row = body.insertRow();
+    for (const value of [`${i + 1}위`, `${record.score}점`, record.date]) row.insertCell().textContent = value;
+  });
+  return table;
+}
+
+function showRankings() {
+  renderRankings();
+  showScreen("screen-rankings");
 }
 
 function goHome() {
@@ -342,6 +455,27 @@ function runSelfTests(questions) {
     return [r.length, r.map((q) => q.question).sort(), r.every((q) => q.choices[q.answer] === "라")]; },
     [3, ["틀린 1", "틀린 2", "틀린 3"], true]);
 
+  const rec = (score, date) => ({ score, date });
+  const fakeStorage = (value, { failGet = false, failSet = false } = {}) => ({
+    data: value, getItem() { if (failGet) throw new Error("x"); return this.data; },
+    setItem(k, v) { if (failSet) throw new Error("x"); this.data = v; } });
+
+  check("순위: 키 형식", () => rankingKey("speed", "한국사"), "speed:한국사");
+  check("순위: 동점이면 먼저 세운 기록이 위", () => addRecord([rec(8, "a")], rec(8, "b")), { list: [rec(8, "a"), rec(8, "b")], rank: 2 });
+  check("순위: 높은 점수가 위", () => addRecord([rec(7, "a")], rec(9.5, "b")).rank, 1);
+  check("순위: 5개만 남고 못 들면 null", () => {
+    const five = [10, 9, 8, 7, 6].map((s) => rec(s, "a")); const r = addRecord(five, rec(5, "b"));
+    return [r.list.length, r.rank]; }, [5, null]);
+  check("순위: 원본 유지", () => { const l = [rec(8, "a")]; addRecord(l, rec(9, "b")); return l.length; }, 1);
+  check("날짜: YYYY-MM-DD", () => todayString(new Date(2026, 9, 8)), "2026-10-08");
+  check("불러오기: 값 없음", () => loadRankings(fakeStorage(null)), {});
+  check("불러오기: 깨진 값", () => loadRankings(fakeStorage("{깨짐")), {});
+  check("불러오기: 저장소 예외", () => loadRankings(fakeStorage(null, { failGet: true })), null);
+  check("불러오기: 저장소 없음", () => loadRankings(null), null);
+  check("저장: 성공 후 다시 읽기", () => { const s = fakeStorage(null);
+    return [saveRankings({ "speed:과학": [rec(9, "a")] }, s), loadRankings(s)]; }, [true, { "speed:과학": [rec(9, "a")] }]);
+  check("저장: 예외면 false", () => saveRankings({}, fakeStorage(null, { failSet: true })), false);
+
   check("문항: 40문항 형식", () => validateQuestions(questions), []);
 
   let failed = 0;
@@ -380,6 +514,8 @@ if (typeof document !== "undefined") {
     $("hint-btn").addEventListener("click", useHint);
     $("home-btn").addEventListener("click", goHome);
     $("retry-btn").addEventListener("click", startRetry);
+    $("rankings-btn").addEventListener("click", showRankings);
+    $("rankings-home-btn").addEventListener("click", goHome);
 
     goHome();
   });
