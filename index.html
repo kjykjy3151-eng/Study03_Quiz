@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- 2026-10-08 20:56 KST -->
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>상식 퀴즈</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section id="screen-start">
+      <h1>상식 퀴즈</h1>
+      <p id="mode-desc" class="note"></p>
+      <h2>카테고리</h2>
+      <div id="category-buttons" class="button-grid"></div>
+    </section>
+
+    <section id="screen-quiz" hidden>
+      <header class="quiz-header">
+        <span id="quiz-category" class="badge"></span>
+        <span id="quiz-mode" class="badge"></span>
+        <span id="quiz-progress"></span>
+        <span id="quiz-score"></span>
+        <span id="timer" hidden></span>
+      </header>
+      <h2 id="question-text"></h2>
+      <div id="choices"></div>
+      <button id="hint-btn" type="button" hidden>힌트</button>
+      <div id="feedback" hidden>
+        <p id="feedback-result"></p>
+        <p id="feedback-explanation"></p>
+        <p class="source">출처: <a id="feedback-source" target="_blank" rel="noopener"></a></p>
+        <button id="next-btn" type="button">다음</button>
+      </div>
+    </section>
+
+    <section id="screen-result" hidden>
+      <h2>결과</h2>
+      <p><span id="result-category" class="badge"></span> <span id="result-mode" class="badge"></span></p>
+      <p id="result-score" class="score"></p>
+      <p id="result-note" class="note"></p>
+      <p id="retry-result" hidden></p>
+      <button id="retry-btn" type="button" hidden>틀린 문제 다시 풀기</button>
+      <button id="home-btn" type="button">처음으로</button>
+    </section>
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

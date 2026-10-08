@@ -81,6 +81,119 @@ function scoreFor(mode, isCorrect, hintUsed) {
   return mode === "hint" && hintUsed ? 0.5 : 1;
 }
 
+// ===== 4. 게임 상태와 화면 조작 (브라우저에서만 쓰임) =====
+
+const state = {
+  mode: "practice",
+  category: null,
+  questions: [],    // 이번 판 문항(보기를 섞은 상태)
+  index: 0,         // 지금 푸는 문항 번호
+  score: 0,         // 첫 시도 점수
+  wrong: [],        // 틀린 문항(연습 재도전용)
+  isRetry: false,   // 재도전 중인지
+  retryCorrect: 0,  // 재도전에서 맞힌 수
+  hintUsed: false,  // 이번 문항에서 힌트를 썼는지
+  answered: false,  // 이번 문항을 이미 채점했는지(두 번 채점 방지)
+  timeLeft: 0,
+  timerId: null,
+};
+
+const $ = (id) => document.getElementById(id);
+
+function showScreen(id) {
+  stopTimer();
+  for (const section of document.querySelectorAll("main > section")) section.hidden = section.id !== id;
+}
+
+function stopTimer() {} // Task 10에서 채운다
+
+function renderStart() {
+  $("mode-desc").textContent = MODES[state.mode].desc;
+  $("category-buttons").replaceChildren(...CATEGORIES.map((category) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.category = category;
+    button.textContent = category;
+    return button;
+  }));
+}
+
+function startRound(category) {
+  Object.assign(state, {
+    category,
+    questions: buildRound(QUESTIONS, category),
+    index: 0,
+    score: 0,
+    wrong: [],
+    isRetry: false,
+    retryCorrect: 0,
+  });
+  showScreen("screen-quiz");
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = state.questions[state.index];
+  state.answered = false;
+  state.hintUsed = false;
+  $("quiz-category").textContent = state.category;
+  $("quiz-mode").textContent = MODES[state.mode].label;
+  $("quiz-progress").textContent = `${state.index + 1} / ${state.questions.length}`;
+  $("quiz-score").textContent = `점수 ${state.score}`;
+  $("question-text").textContent = q.question;
+  $("choices").replaceChildren(...q.choices.map((text, i) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice";
+    button.dataset.index = i;
+    button.textContent = text;
+    return button;
+  }));
+  $("feedback").hidden = true;
+}
+
+function choose(index) {
+  if (state.answered) return;
+  showFeedback(index);
+}
+
+// choiceIndex가 null이면 시간 초과다.
+function showFeedback(choiceIndex) {
+  if (state.answered) return;
+  state.answered = true;
+  stopTimer();
+
+  const q = state.questions[state.index];
+  const isCorrect = choiceIndex === q.answer;
+  state.score += scoreFor(state.mode, isCorrect, state.hintUsed);
+  if (!isCorrect) state.wrong.push(q);
+
+  const buttons = $("choices").querySelectorAll(".choice");
+  buttons[q.answer].classList.add("correct");
+  if (choiceIndex !== null && !isCorrect) buttons[choiceIndex].classList.add("wrong");
+  for (const button of buttons) button.disabled = true;
+  $("hint-btn").disabled = true;
+
+  $("feedback-result").textContent = choiceIndex === null ? MESSAGES.timeout : isCorrect ? MESSAGES.correct : MESSAGES.wrong;
+  $("feedback-explanation").textContent = q.explanation;
+  $("feedback-source").textContent = q.source.title;
+  $("feedback-source").href = q.source.url;
+  $("next-btn").textContent = state.index === state.questions.length - 1 ? "결과 보기" : "다음";
+  $("quiz-score").textContent = `점수 ${state.score}`;
+  $("feedback").hidden = false;
+}
+
+function nextQuestion() {
+  if (state.index === state.questions.length - 1) {
+    finishPass();
+    return;
+  }
+  state.index++;
+  renderQuestion();
+}
+
+function finishPass() {} // Task 8에서 채운다
+
 // ===== 5. 자체 점검 (node script.js 또는 index.html?test) =====
 
 const selfTestResults = [];
@@ -150,6 +263,19 @@ if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
     for (const message of validateQuestions(QUESTIONS)) console.error("문항 데이터 오류:", message);
     if (new URLSearchParams(location.search).has("test")) runSelfTests(QUESTIONS);
+
+    $("category-buttons").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-category]");
+      if (button) startRound(button.dataset.category);
+    });
+    $("choices").addEventListener("click", (event) => {
+      const button = event.target.closest("button.choice");
+      if (button) choose(Number(button.dataset.index));
+    });
+    $("next-btn").addEventListener("click", nextQuestion);
+
+    renderStart();
+    showScreen("screen-start");
   });
 }
 
