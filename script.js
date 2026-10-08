@@ -105,7 +105,25 @@ function showScreen(id) {
   for (const section of document.querySelectorAll("main > section")) section.hidden = section.id !== id;
 }
 
-function stopTimer() {} // Task 10에서 채운다
+// 스피드 모드: 이전 타이머를 지우고 제한 시간부터 1초씩 센다. 0초가 되면 시간 초과로 채점한다.
+function startTimer() {
+  stopTimer();
+  state.timeLeft = MODES[state.mode].timeLimit;
+  $("timer").textContent = `${state.timeLeft}초`;
+  state.timerId = setInterval(() => {
+    state.timeLeft--;
+    $("timer").textContent = `${state.timeLeft}초`;
+    if (state.timeLeft <= 0) {
+      stopTimer();
+      showFeedback(null);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(state.timerId);
+  state.timerId = null;
+}
 
 function selectMode(mode) {
   state.mode = mode;
@@ -158,6 +176,10 @@ function renderQuestion() {
     return button;
   }));
   $("feedback").hidden = true;
+
+  const hasTimer = MODES[state.mode].timeLimit !== null;
+  $("timer").hidden = !hasTimer;
+  if (hasTimer) startTimer();
 }
 
 function choose(index) {

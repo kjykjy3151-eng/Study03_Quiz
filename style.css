@@ -74,6 +74,12 @@ button:disabled {
   align-items: center;
 }
 
+#timer {
+  margin-left: auto;
+  font-weight: bold;
+  color: #d63b3b;
+}
+
 #choices {
   display: grid;
   gap: 8px;
